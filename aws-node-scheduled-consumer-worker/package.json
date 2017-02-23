@@ -1,0 +1,46 @@
+{
+  "name": "asynchronous",
+  "version": "0.0.1",
+  "repository": {},
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "6.23.0",
+    "babel-core": "6.22.1",
+    "babel-jest": "18.0.0",
+    "babel-loader": "6.2.10",
+    "babel-plugin-transform-class-properties": "6.22.0",
+    "babel-plugin-transform-object-rest-spread": "6.22.0",
+    "babel-plugin-transform-runtime": "6.15.0",
+    "babel-polyfill": "6.22.0",
+    "babel-preset-env": "1.1.8",
+    "babel-preset-latest": "6.22.0",
+    "cross-env": "3.1.4",
+    "eslint": "3.15.0",
+    "eslint-config-airbnb": "14.1.0",
+    "eslint-import-resolver-webpack": "0.8.1",
+    "eslint-loader": "1.6.1",
+    "eslint-plugin-import": "2.2.0",
+    "eslint-plugin-jsx-a11y": "4.0.0",
+    "eslint-plugin-react": "6.9.0",
+    "jest": "18.1.0",
+    "json-loader": "0.5.4",
+    "serverless": "1.7.0",
+    "serverless-plugin-write-env-vars": "1.0.1",
+    "serverless-webpack": "git+https://github.com/TicketSolutionsPtyLtd/serverless-webpack.git/#ticketsolutions_webpack2",
+    "webpack": "2.2.1"
+  },
+  "dependencies": {
+    "aws-sdk": "2.15.0",
+    "bluebird": "3.4.7",
+    "node-fetch": "1.6.3"
+  },
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "sls": "cross-env SLS_IGNORE_WARNING=* sls",
+    "build": "cross-env SLS_IGNORE_WARNING=* sls webpack",
+    "watch": "cross-env SLS_IGNORE_WARNING=* sls webpack watch",
+    "package": "cross-env SLS_IGNORE_WARNING=* sls deploy --noDeploy",
+    "deploy": "cross-env SLS_IGNORE_WARNING=* sls deploy -v"
+  }
+}

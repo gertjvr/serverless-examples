@@ -1,0 +1,167 @@
+service: Asynchronous
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  variableSyntax: '\${{([ :a-zA-Z0-9._,\\-\\/\\(\\)]+?)}}' # this will match ${{}}
+  profile: ${{self:custom.current.profile}}
+  stage: ${{self:custom.current.stage}}
+  region: ${{self:custom.current.region}}
+  memorySize: ${{self:custom.current.memorySize}}
+  timeout: ${{self:custom.current.timeout}}
+  environment:
+    APPLICATION_NAME: ${{self:custom.current.environment.APPLICATION_NAME}}
+    APPLICATION_VERSION: ${{self:custom.current.environment.APPLICATION_VERSION}}
+    ENVIRONMENT_NAME: ${{self:custom.current.environment.ENVIRONMENT_NAME}}
+    ENVIRONMENT_TYPE: ${{self:custom.current.environment.ENVIRONMENT_TYPE}}
+
+plugins:
+  - serverless-plugin-write-env-vars
+  - serverless-webpack
+
+package:
+  individually: true
+  exclude:
+    - '**'
+
+custom: ${{file(./serverless.custom.yml)}}
+
+functions:
+  consumer:
+    handler: consumer.handler
+    role: ConsumerLambdaRole
+    environment:
+      SQS_QUEUE_URL:
+        Ref: TaskQueue
+      WORKER_LAMBDA_FUNCTION_NAME:
+        Fn::GetAtt:
+          - WorkerLambdaFunction
+          - Arn
+    events:
+      - schedule: rate(1 hour)
+      - sns: {{self:service}}-consumer-${{self:custom.current.stage}}-notification
+    package:
+      exclude:
+        - '!consumer.js'
+  worker:
+    handler: worker.handler
+    role: WorkerLambdaRole
+    environment:
+      SQS_QUEUE_URL:
+        Ref: TaskQueue
+    package:
+      exclude:
+        - '!worker.js'
+
+resources:
+  Resources:
+    TaskAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Trigger consumer when there are messeages to be processed
+        Namespace: AWS/SQS
+        MetricName: ApproximateNumberOfMessagesVisible
+        Statistic: Average
+        Period: 60
+        EvaluationPeriods: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Threshold: 3
+        AlarmActions:
+          - Ref: SNSTopic${{self:service}}consumer${{self:custom.current.stage}}notification
+        Dimensions:
+          - Name: QueueName
+            Value:
+              Fn::GetAtt:
+                - TaskQueue
+                - QueueName
+    TaskQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${{self:service}}-${{self:custom.current.stage}}-task-queue
+        MessageRetentionPeriod: 1209600
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - DeadLetterQueue
+              - Arn
+          maxReceiveCount: 10
+    DeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${{self:service}}-${{self:custom.current.stage}}-dead-letter-queue
+        MessageRetentionPeriod: 1209600
+    ConsumerLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Path: '/'
+        Policies:
+          - PolicyName: logs
+            PolicyDocument:
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: arn:aws:logs:*:*:*
+          - PolicyName: sqs
+            PolicyDocument:
+              Statement:
+              - Effect: Allow
+                Action:
+                - sqs:ReceiveMessage
+                Resource:
+                  Fn::GetAtt:
+                  - TaskQueue
+                  - Arn
+          - PolicyName: lambda
+            PolicyDocument:
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource:
+                    Fn::GetAtt:
+                      - WorkerLambdaFunction
+                      - Arn
+    WorkerLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Path: '/'
+        Policies:
+          - PolicyName: logs
+            PolicyDocument:
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: arn:aws:logs:*:*:*
+          - PolicyName: sqs
+            PolicyDocument:
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - sqs:DeleteMessage
+                  Resource:
+                    Fn::GetAtt:
+                      - TaskQueue
+                      - Arn
