@@ -1,0 +1,7 @@
+{
+    "vsicons.presets.angular": false,
+    "prettier.tabWidth": 4,
+    "prettier.singleQuote": true,
+    "prettier.trailingComma": false,
+    "prettier.bracketSpacing": true
+}

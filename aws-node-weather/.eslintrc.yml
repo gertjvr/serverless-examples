@@ -1,0 +1,59 @@
+extends: "airbnb"
+
+parser: babel-eslint
+
+plugins:
+  - react
+  - jsx-a11y
+  - import
+
+rules:
+
+  # http://eslint.org/docs/rules/semi
+  # no semi-colons (YOLO) .. if you really want semicolons, remove this rule and run
+  # '.\node_modules\.bin\eslint --fix src' from the app root to re-add
+  semi:
+    - error
+    - never
+
+  # http://eslint.org/docs/rules/indent
+  # indent 4 spaces (rather than airbnb's default of 2)
+  indent:
+    - 2
+    - 4
+    - SwitchCase: 1
+
+  comma-dangle:
+    - error
+    - always-multiline
+
+  no-underscore-dangle: off
+
+  func-names: off
+
+  # http://eslint.org/docs/rules/linebreak-style
+  linebreak-style: off
+
+  max-len: off
+
+  import/prefer-default-export: off
+
+  no-console: off
+
+  # doesn't work in node v4 :(
+  strict: off
+  react/require-extension : off
+  import/no-extraneous-dependencies: off
+
+env:
+  node: true
+  jest: true
+
+settings:
+  import/resolver:
+    node:
+      moduleDirectory:
+        - node_modules
+        - src # replace with your app-module-path directory
+    webpack:
+      config: "webpack.config.js"

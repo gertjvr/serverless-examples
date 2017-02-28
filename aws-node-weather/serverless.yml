@@ -1,0 +1,34 @@
+service: example
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  profile: ${opt:profile}
+  stage: api
+  region: ap-souteast-2
+  memorySize: 128
+  timeout: 30
+  environment:
+    WEATHER_API_URL: http://api.openweathermap.org/data/2.5/weather
+    WEATHER_API_KEY: d02e80f915531ae2de8b8ceab66e38cf
+
+plugins:
+  - serverless-offline
+  - serverless-webpack
+
+package:
+  individually: true
+  exclude:
+    - '**'
+
+functions:
+  weather:
+    handler: weather.handler
+    events:
+      - http:
+          path: /weather/{city}
+          method: GET
+          cors: true
+    package:
+      exclude:
+        - '!weather.js'
