@@ -4,8 +4,11 @@
   "repository": {},
   "license": "MIT",
   "devDependencies": {
+    "@types/aws-lambda": "0.0.10",
     "@types/bluebird": "3.5.4",
+    "@types/jest": "19.2.3",
     "@types/node": "7.0.22",
+    "aws-lambda-mock-context": "3.1.0",
     "babel-cli": "6.24.1",
     "babel-core": "6.24.1",
     "babel-eslint": "7.2.3",
@@ -56,21 +59,24 @@
   },
   "jest": {
     "collectCoverageFrom": [
-      "src/**/*.{js}"
+      "src/**/*.{ts}"
     ],
     "setupFiles": [],
     "testPathIgnorePatterns": [
       "<rootDir>[/\\\\](build|docs|node_modules|scripts)[/\\\\]"
     ],
     "testEnvironment": "node",
-    "transform": {},
+    "transform": {
+      "^.+\\.ts?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js)$"
     ],
     "moduleNameMapper": {},
     "moduleFileExtensions": [
+      "ts",
       "js"
     ],
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(js)$"
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|js)$"
   }
 }

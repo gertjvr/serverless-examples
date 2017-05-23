@@ -1,15 +1,17 @@
+import { Context, Callback } from 'aws-lambda'
+
 import BbPromise from 'bluebird'
 import AWS from 'aws-sdk'
 import AWSXRay from 'aws-xray-sdk-core'
 
 AWS.config.setPromisesDependency(BbPromise)
 
-const sqs = AWSXRay.captureAWSClient(new AWS.SQS())
+const sqs: AWS.SQS = AWSXRay.captureAWSClient(new AWS.SQS())
 
 const QUEUE_URL = process.env.SQS_QUEUE_URL
 
-const deleteMessage = async (receiptHandle) => {
-  const params = {
+const deleteMessage = async (receiptHandle: string): Promise<any> => {
+  const params: AWS.SQS.DeleteMessageRequest = {
     QueueUrl: QUEUE_URL,
     ReceiptHandle: receiptHandle,
   }
@@ -19,18 +21,20 @@ const deleteMessage = async (receiptHandle) => {
   return data
 }
 
-const processMessage = async (message) => {
-  console.info('Invoking processMessage.', { message: JSON.stringify(message) })
-  console.log({ message: JSON.stringfy(message) })
-  console.info('Invoked processMessage.')
+const processMessage = async (message: string): Promise<boolean> => {
+  try {
+    console.info('Invoking processMessage.', { message })
+    return true
+  } finally {
+    console.info('Invoked processMessage.')
+  }
 }
 
-export const handler = async (event, context ,callback) => {
+export const handler = async (event: AWS.SQS.Message, _context: Context, callback: Callback): Promise<void> => {
   try {
     console.info('Invoking Worker.', { event: JSON.stringify(event) })
-    const { ReceiptHandle, Body } = event
-    const message = JSON.parse(Body)
-    const processed = await processMessage(message)
+    const { ReceiptHandle, Body: message } = event
+    const processed: boolean = await processMessage(message)
     if (processed) {
       await deleteMessage(ReceiptHandle)
     }

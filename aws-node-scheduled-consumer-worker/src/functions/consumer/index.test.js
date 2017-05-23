@@ -1,4 +1,0 @@
-describe('consumer', () => {
-  it('execute', () => {
-  })
-})

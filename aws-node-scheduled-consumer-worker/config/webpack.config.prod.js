@@ -30,7 +30,6 @@ module.exports = {
   },
   externals: [
     'aws-sdk', // aws-sdk included in Lambda
-    'vertx',
   ],
   module: {
     strictExportPresence: true,
@@ -43,6 +42,9 @@ module.exports = {
         test: /\.(ts)$/,
         loader: 'tslint-loader',
         include: paths.appSrc,
+        options: {
+          typeCheck: true,
+        },
       },
       {
         enforce: 'pre',
