@@ -3,7 +3,7 @@ service: example
 provider:
   name: aws
   runtime: nodejs4.3
-  profile: ${opt:profile}
+#   profile: ${opt:profile}
   stage: api
   region: ap-souteast-2
   memorySize: 128

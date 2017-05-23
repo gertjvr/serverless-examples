@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const webpack = require('webpack')
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin')
 
 const appPath = fs.realpathSync(process.cwd())
 const resolveApp = relativePath =>
@@ -83,6 +84,11 @@ module.exports = {
         new webpack.IgnorePlugin(/\.(css|less)$/),
         // this is a workaround for node-fetch optional dependencies.
         new webpack.NormalModuleReplacementPlugin(/\/iconv-loader$/, 'node-noop'),
+        new UglifyJSPlugin({
+            compress: true,
+            mangle: true,
+            sourceMap: true,
+        }),
     ],
 
     target: 'node',

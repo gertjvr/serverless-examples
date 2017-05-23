@@ -26,9 +26,11 @@
     "eslint-plugin-react": "6.10.0",
     "jest": "19.0.2",
     "json-loader": "0.5.4",
-    "serverless": "1.7.0",
+    "serverless": "^1.9.0",
     "serverless-offline": "3.9.0",
     "serverless-webpack": "git+https://github.com/TicketSolutionsPtyLtd/serverless-webpack.git/#ticketsolutions_webpack2",
+    "uglify-js": "git://github.com/mishoo/UglifyJS2#harmony",
+    "uglifyjs-webpack-plugin": "^0.3.1",
     "webpack": "2.2.1"
   },
   "dependencies": {
