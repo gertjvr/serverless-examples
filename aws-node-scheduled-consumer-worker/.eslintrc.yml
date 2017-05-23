@@ -10,12 +10,6 @@ rules:
   semi:
     - error
     - never
-  # http://eslint.org/docs/rules/indent
-  # indent 4 spaces (rather than airbnb's default of 2)
-  indent:
-    - 2
-    - 4
-    - SwitchCase: 1
   comma-dangle:
     - error
     - always-multiline
@@ -39,6 +33,7 @@ rules:
   prefer-spread: off
   react/require-extension : off
   import/no-extraneous-dependencies: off
+  no-console: off
 
 env:
   node: true
@@ -51,4 +46,4 @@ settings:
         - node_modules
         - src # replace with your app-module-path directory
     webpack:
-      config: "webpack.config.js"
+      config: "config/webpack.config.js"

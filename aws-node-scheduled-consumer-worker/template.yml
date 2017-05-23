@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+
+Resources:
+  TaskConsumerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./build/consumer
+      FunctionName: !Sub ${AWS::StackName}-task-consumer
+      MemorySize: 128
+      Timeout: 60
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref TaskQueue
+          WORKER_LAMBDA_FUNCTION_NAME: !GetAtt TaskWorkerFunction.Arn
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+        NotifyConsumer:
+          Type: SNS
+          Properties:
+            Topic: !Ref TaskNotification
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - sqs:ReceiveMessage
+              Resource: !GetAtt TaskQueue.Arn
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: !GetAtt TaskWorkerFunction.Arn
+
+  TaskWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./build/worker
+      FunctionName: !Sub ${AWS::StackName}-task-worker
+      MemorySize: 128
+      Timeout: 60
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref TaskQueue
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - sqs:DeleteMessage
+              Resource: !GetAtt TaskQueue.Arn
+
+  TaskAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Trigger consumer when there are messeages to be processed
+        Namespace: AWS/SQS
+        MetricName: ApproximateNumberOfMessagesVisible
+        Statistic: Average
+        Period: 60
+        EvaluationPeriods: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Threshold: 3
+        AlarmActions:
+          - !Ref TaskNotification
+        Dimensions:
+          - Name: QueueName
+            Value: !GetAtt TaskQueue.QueueName
+
+  TaskNotification:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: !Sub ${AWS::StackName}-task-notification
+
+  TaskQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: !Sub ${AWS::StackName}-task-queue
+        MessageRetentionPeriod: 1209600
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt TaskDeadLetterQueue.Arn
+          maxReceiveCount: 10
+
+  TaskDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: !Sub ${AWS::StackName}-dead-letter-queue
+        MessageRetentionPeriod: 1209600
+
+Outputs:
+

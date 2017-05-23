@@ -4,43 +4,73 @@
   "repository": {},
   "license": "MIT",
   "devDependencies": {
-    "babel-cli": "6.23.0",
-    "babel-core": "6.22.1",
-    "babel-jest": "18.0.0",
-    "babel-loader": "6.2.10",
-    "babel-plugin-transform-class-properties": "6.22.0",
-    "babel-plugin-transform-object-rest-spread": "6.22.0",
-    "babel-plugin-transform-runtime": "6.15.0",
-    "babel-polyfill": "6.22.0",
-    "babel-preset-env": "1.1.8",
-    "babel-preset-latest": "6.22.0",
-    "cross-env": "3.1.4",
-    "eslint": "3.15.0",
-    "eslint-config-airbnb": "14.1.0",
+    "@types/bluebird": "3.5.4",
+    "@types/node": "7.0.22",
+    "babel-cli": "6.24.1",
+    "babel-core": "6.24.1",
+    "babel-eslint": "7.2.3",
+    "babel-jest": "20.0.3",
+    "babel-loader": "7.0.0",
+    "babel-plugin-transform-async-to-generator": "6.24.1",
+    "babel-plugin-transform-class-properties": "6.24.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "6.24.1",
+    "babel-plugin-transform-object-rest-spread": "6.23.0",
+    "babel-plugin-transform-runtime": "6.23.0",
+    "babel-polyfill": "6.23.0",
+    "babel-preset-env": "1.5.1",
+    "babel-preset-latest": "6.24.1",
+    "cross-env": "5.0.0",
+    "dotenv": "4.0.0",
+    "eslint": "3.19.0",
+    "eslint-config-airbnb": "15.0.1",
     "eslint-import-resolver-webpack": "0.8.1",
-    "eslint-loader": "1.6.1",
+    "eslint-loader": "1.7.1",
     "eslint-plugin-import": "2.2.0",
-    "eslint-plugin-jsx-a11y": "4.0.0",
-    "eslint-plugin-react": "6.9.0",
-    "jest": "18.1.0",
+    "eslint-plugin-jsx-a11y": "5.0.3",
+    "eslint-plugin-react": "7.0.1",
+    "filesize": "3.5.10",
+    "fs-extra": "3.0.1",
+    "gzip-size": "3.0.0",
+    "jest": "20.0.3",
     "json-loader": "0.5.4",
-    "serverless": "1.7.0",
-    "serverless-plugin-write-env-vars": "1.0.1",
-    "serverless-webpack": "git+https://github.com/TicketSolutionsPtyLtd/serverless-webpack.git/#ticketsolutions_webpack2",
-    "webpack": "2.2.1"
+    "recursive-readdir": "2.2.1",
+    "strip-ansi": "3.0.1",
+    "transform-loader": "0.2.4",
+    "ts-jest": "20.0.4",
+    "ts-loader": "2.1.0",
+    "tslint": "5.3.2",
+    "tslint-config-standard": "5.0.2",
+    "tslint-loader": "3.5.3",
+    "typescript": "2.3.3",
+    "webpack": "2.6.0"
   },
   "dependencies": {
-    "aws-sdk": "2.15.0",
-    "bluebird": "3.4.7",
-    "node-fetch": "1.6.3"
+    "aws-sdk": "2.55.0",
+    "aws-xray-sdk-core": "1.1.1",
+    "bluebird": "3.5.0"
   },
   "scripts": {
-    "test": "jest",
-    "lint": "eslint .",
-    "sls": "cross-env SLS_IGNORE_WARNING=* sls",
-    "build": "cross-env SLS_IGNORE_WARNING=* sls webpack",
-    "watch": "cross-env SLS_IGNORE_WARNING=* sls webpack watch",
-    "package": "cross-env SLS_IGNORE_WARNING=* sls deploy --noDeploy",
-    "deploy": "cross-env SLS_IGNORE_WARNING=* sls deploy -v"
+    "lint": "eslint ./src",
+    "build": "node scripts/build.js",
+    "test": "node scripts/test.js --env=jsdom"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js}"
+    ],
+    "setupFiles": [],
+    "testPathIgnorePatterns": [
+      "<rootDir>[/\\\\](build|docs|node_modules|scripts)[/\\\\]"
+    ],
+    "testEnvironment": "node",
+    "transform": {},
+    "transformIgnorePatterns": [
+      "[/\\\\]node_modules[/\\\\].+\\.(js)$"
+    ],
+    "moduleNameMapper": {},
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(js)$"
   }
 }

@@ -1,73 +1,63 @@
-/* eslint-disable no-console */
-
 import BbPromise from 'bluebird'
 import AWS from 'aws-sdk'
+import AWSXRay from 'aws-xray-sdk-core'
 
-const sqs = new AWS.SQS()
-const lambda = new AWS.Lambda()
+AWS.config.setPromisesDependency(BbPromise)
+
+const sqs = AWSXRay.captureAWSClient(new AWS.SQS())
+const lambda = AWSXRay.captureAWSClient(new AWS.Lambda())
 
 const QUEUE_URL = process.env.SQS_QUEUE_URL
 const WORKER_LAMBDA_FUNCTION_NAME = process.env.WORKER_LAMBDA_FUNCTION_NAME
 
-const receiveMessages = () => {
-    console.info('Invoking receiveMessages')
-    const params = {
-        QueueUrl: QUEUE_URL,
-        MaxNumberOfMessages: 10,
+const receiveMessages = async () => {
+  const params = {
+    QueueUrl: QUEUE_URL,
+    MaxNumberOfMessages: 10,
+  }
+  console.info('Invoking receiveMessages.', { params: JSON.stringify(params) })
+  const data = await sqs.receiveMessage(params).promise()
+  console.info('Invoked receiveMessages.', { data: JSON.stringify(data) })
+  return data
+}
+
+const invokeWorkerLambda = async (task) => {
+  const params = {
+    FunctionName: WORKER_LAMBDA_FUNCTION_NAME,
+    InvocationType: 'Event',
+    Payload: JSON.stringify(task),
+  }
+  console.info('Invoking invokeWorkerLambda.', { params: JSON.stringify(params) })
+  const data = await lambda.invoke(params).promise()
+  console.info('Invoked invokeWorkerLambda.', { data: JSON.stringify(data) })
+  return data
+}
+
+const handleSQSMessages = async (context, callback) => {
+  console.info('Invoking handleSQSMessages.')
+  const { Messages: messages } = await receiveMessages()
+  if (messages && messages.length > 0) {
+    console.info(`Invoking lambda workers[${messages.length}].`)
+    const invocations = await BbPromise.map(messages, message => invokeWorkerLambda(message))
+    if (context.getRemainingTimeInMillis() > 20000) {
+      await handleSQSMessages(context, callback)
     }
-    return BbPromise.fromCallback(cb => sqs.receiveMessage(params, cb))
-        .then((data) => {
-            console.info('Invoked receiveMessages')
-            return data.Messages
-        })
+    console.info(`Invoked lambda workers[${invocations.length}].`)
+  }
+
+  console.info('Invoked handleSQSMessages.')
 }
 
-const invokeWorkerLambda = (task) => {
-    console.info(`Invoking invokeWorkerLambda: ${JSON.stringify(task)}`)
-    const params = {
-        FunctionName: WORKER_LAMBDA_FUNCTION_NAME,
-        InvocationType: 'Event',
-        Payload: JSON.stringify(task),
-    }
-    return BbPromise.fromCallback(cb => lambda.invoke(params, cb))
-        .then((data) => {
-            console.info('Invoked invokeWorkerLambda')
-            return data
-        })
-}
-
-const handleSQSMessages = (context, callback) => {
-    console.info('Invoking handleSQSMessages')
-    return receiveMessages()
-        .then((messages) => {
-            if (messages && messages.length > 0) {
-                const invocations = messages.map(message =>
-                    invokeWorkerLambda(message)
-                        .then(() => {
-                            if (context.getRemainingTimeInMillis() > 20000) {
-                                handleSQSMessages(context, callback)
-                            } else {
-                                callback(null, 'PAUSE')
-                            }
-                        })
-                )
-
-                return BbPromise.all(invocations)
-                    .then(() => callback(null, 'DONE'))
-                    .then(() => console.log('Invoked handleSQSMessages'))
-                    .catch(err => callback(err))
-            }
-
-            return BbPromise.resolve(() => callback(null, 'DONE'))
-                .then(() => console.log('Invoked handleSQSMessages'))
-        })
-}
-
-export const handler = (event, context, callback) => {
-    console.log('Invoking Consumer')
-
-    return handleSQSMessages(context, callback)
-        .then(() => console.log('Invoked Consumer'))
+export const handler = async (event, context, callback) => {
+  try {
+    console.info('Invoking Consumer.', { event: JSON.stringify(event) })
+    await handleSQSMessages(context, callback)
+    callback(null, 'DONE')
+    console.info('Invoked Consumer.')
+  } catch (err) {
+    callback(err)
+    console.error(`Invoked Consumer error: ${err.message}.`, err.stack)
+  }
 }
 
 export default handler
