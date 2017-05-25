@@ -1,4 +1,5 @@
 import context from 'aws-lambda-mock-context'
+
 import BbPromise from 'bluebird'
 import AWSXRay from 'aws-xray-sdk-core'
 import { handler } from './index'
