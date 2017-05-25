@@ -1,13 +1,13 @@
 import { Context, Callback } from 'aws-lambda'
 
 import BbPromise from 'bluebird'
-import AWS from 'aws-sdk'
 import AWSXRay from 'aws-xray-sdk-core'
 
+const AWS = AWSXRay.captureAWS(require('aws-sdk'))
 AWS.config.setPromisesDependency(BbPromise)
 
-const sqs: AWS.SQS = AWSXRay.captureAWSClient(new AWS.SQS())
-const lambda: AWS.Lambda = AWSXRay.captureAWSClient(new AWS.Lambda())
+const sqs: AWS.SQS = new AWS.SQS()
+const lambda: AWS.Lambda = new AWS.Lambda()
 
 const QUEUE_URL = process.env.SQS_QUEUE_URL
 const WORKER_LAMBDA_FUNCTION_NAME = process.env.WORKER_LAMBDA_FUNCTION_NAME
@@ -46,7 +46,6 @@ const handleSQSMessages = async (context: Context, callback: Callback): Promise<
     }
     console.info(`Invoked lambda workers[${invocations.length}].`)
   }
-
   console.info('Invoked handleSQSMessages.')
 }
 
